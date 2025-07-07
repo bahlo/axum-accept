@@ -11,21 +11,22 @@ Typed accept negotiation for axum, following [RFC7231](https://www.rfc-editor.or
 
 ```rust
 use axum::{extract::Json, response::{IntoResponse, Response}};
-use axum_accept::{typed_media_type, Accept2};
+use axum_accept::AcceptExtractor;
 use serde::Serialize;
+use serde_json::json;
 
-typed_media_type!(TextPlain: TEXT/PLAIN);
-typed_media_type!(ApplicationJson: APPLICATION/JSON);
-
-#[derive(Debug, Serialize)]
-struct Message {
-    content: String,
+#[derive(AcceptExtractor)]
+enum Accept {
+    #[accept(mediatype="text/plain")]
+    TextPlain,
+    #[accept(mediatype="application/json")]
+    ApplicationJson,
 }
 
-async fn my_handler(accept: Accept2<TextPlain, ApplicationJson>) -> Response {
+async fn my_handler(accept: Accept) -> Response {
     match accept {
-        Accept2::A(TextPlain(_)) => "hello world".into_response(),
-        Accept2::B(ApplicationJson(_)) => Json(Message { content: "hello_world".to_string() }).into_response(),
+        TextPlain => "hello world".into_response(),
+        ApplicationJson => Json(json! { "content": "hello_world".to_string() }).into_response(),
     }
 }
 ```

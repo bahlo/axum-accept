@@ -1,0 +1,15 @@
+[package]
+name = "axum-accept-macros"
+version = "0.0.1"
+edition = "2024"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+proc-macro2 = "1"
+quote = "1"
+syn = { version = "2", features = ["full"] }
+axum-accept-shared = { path = "../axum-accept-shared" }
+axum = { workspace = true }
+mediatype = { workspace = true }

@@ -1,19 +1,11 @@
-[package]
-name = "axum-accept"
-version = "0.0.1"
-authors = ["Arne Bahlo <hey@arne.me>"]
-edition = "2024"
-description = "Typed accept negotiation for axum."
-license = "MIT OR Apache-2.0"
-repository = "https://github.com/bahlo/axum-accept"
-readme = "README.md"
-keywords = ["axum", "accept", "media-type"]
+[workspace]
+members = [
+    "axum-accept",
+    "axum-accept-macros",
+    "axum-accept-shared",
+]
+resolver = "2"
 
-[dependencies]
-axum = { version = "0.8", default-features = false }
+[workspace.dependencies]
+axum = { version = "0.8.4", default-features = false }
 mediatype = "0.20"
-
-[dev-dependencies]
-axum = { version = "0.8", features = ["json"] }
-serde = { version = "1", features = ["derive"] }
-tokio = "1"
