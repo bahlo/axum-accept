@@ -1,0 +1,8 @@
+[package]
+name = "axum-accept"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+axum = { version = "0.8", default-features = false }
+mediatype = "0.20"
