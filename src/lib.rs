@@ -1,3 +1,28 @@
+//! This library allows you to specify which media-types you accept in Axum in
+//! a typed way.
+//!
+//! # Example
+//!
+//! ```rust
+//! typed_media_type!(TextPlain: TEXT/PLAIN);
+//! typed_media_type!(ApplicationJson: APPLICATION/JSON);
+//!
+//! #[derive(Debug, Serialize)]
+//! struct Message {
+//!     content: String,
+//! }
+//!
+//! async fn my_handler(accept: Accept2<TextPlain, ApplicationJson) -> Response {
+//!     match accept {
+//!         Accept2::A(TextPlain(_)) => "hello world".into_response(),
+//!         Accept2::B(ApplicationJson(_)) => Json(Message { content: "hello_world".to_string() }).into_response(),
+//!     }
+//! }
+//! ```
+#![deny(warnings)]
+#![deny(clippy::pedantic, clippy::unwrap_used)]
+#![deny(missing_docs)]
+
 use axum::{
     extract::FromRequestParts,
     http::{HeaderMap, StatusCode, header::ToStrError, request::Parts},
@@ -8,11 +33,23 @@ use mediatype::{MediaTypeError, MediaTypeList};
 #[doc(hidden)]
 pub use mediatype;
 
+/// This type is meant to be implemented for newtypes around
+/// `mediatype::MediaType`, created with `typed_media_type`.
 pub trait AssociatedMediaType {
+    /// Construct this type. Will panic if it doesn't match the associated media
+    /// type.
     fn new(media_type: mediatype::MediaType<'static>) -> Self;
+    /// The media type associated with this type.
     fn associated_media_type() -> mediatype::MediaType<'static>;
 }
 
+/// Construct a new typed media type.
+///
+/// # Example
+///
+/// ```rust
+/// typed_media_type!(TextPlain: TEXT/PLAIN);
+/// ```
 #[macro_export]
 macro_rules! typed_media_type {
     ($name:ident: $ty:ident/$subty:ident) => {
@@ -34,15 +71,21 @@ macro_rules! typed_media_type {
     };
 }
 
+/// The error type returned in the `FromRequestParts` implementations.
 #[derive(Debug)]
 pub enum AcceptRejection {
+    /// The header could not be converted to a &str.
     InvalidHeader(ToStrError),
+    /// The media type at index .0 could not be parsed.
     InvalidMediaType(usize, MediaTypeError),
+    /// No supported media type was found.
     NoSupportedMediaTypeFound,
 }
 
-impl IntoResponse for AcceptRejection {
-    fn into_response(self) -> Response {
+impl AcceptRejection {
+    /// Get the status and message for an error.
+    #[must_use]
+    pub fn status_and_message(&self) -> (StatusCode, String) {
         match self {
             Self::InvalidHeader(e) => (
                 StatusCode::BAD_REQUEST,
@@ -54,10 +97,15 @@ impl IntoResponse for AcceptRejection {
             ),
             Self::NoSupportedMediaTypeFound => (
                 StatusCode::NOT_ACCEPTABLE,
-                format!("Accept header does not contain supported media types"),
+                "Accept header does not contain supported media types".to_string(),
             ),
         }
-        .into_response()
+    }
+}
+
+impl IntoResponse for AcceptRejection {
+    fn into_response(self) -> Response {
+        self.status_and_message().into_response()
     }
 }
 
@@ -66,11 +114,12 @@ fn get_media_type_list(headers: &HeaderMap) -> Result<MediaTypeList, AcceptRejec
         .get("accept")
         .map(|header| header.to_str())
         .transpose()
-        .map_err(|e| AcceptRejection::InvalidHeader(e))?
+        .map_err(AcceptRejection::InvalidHeader)?
         .unwrap_or_default();
     Ok(MediaTypeList::new(accept_header))
 }
 
+/// Accept a single media type.
 #[derive(Debug)]
 pub struct Accept<T: AssociatedMediaType>(T);
 
@@ -102,13 +151,16 @@ where
     }
 }
 
+/// Accept 2 media types.
 #[derive(Debug)]
 pub enum Accept2<A, B>
 where
     A: AssociatedMediaType,
     B: AssociatedMediaType,
 {
+    /// The first media type.
     A(A),
+    /// The second media type.
     B(B),
 }
 
@@ -144,6 +196,7 @@ where
     }
 }
 
+/// Accept 3 media types.
 #[derive(Debug)]
 pub enum Accept3<A, B, C>
 where
@@ -151,8 +204,11 @@ where
     B: AssociatedMediaType,
     C: AssociatedMediaType,
 {
+    /// The first media type.
     A(A),
+    /// The second media type.
     B(B),
+    /// The third media type.
     C(C),
 }
 
@@ -192,6 +248,7 @@ where
     }
 }
 
+/// Accept 4 media types.
 #[derive(Debug)]
 pub enum Accept4<A, B, C, D>
 where
@@ -200,9 +257,13 @@ where
     C: AssociatedMediaType,
     D: AssociatedMediaType,
 {
+    /// The first media type.
     A(A),
+    /// The second media type.
     B(B),
+    /// The third media type.
     C(C),
+    /// The fourth media type.
     D(D),
 }
 
@@ -246,6 +307,7 @@ where
     }
 }
 
+/// Accept 5 media types.
 #[derive(Debug)]
 pub enum Accept5<A, B, C, D, E>
 where
@@ -255,10 +317,15 @@ where
     D: AssociatedMediaType,
     E: AssociatedMediaType,
 {
+    /// The first media type.
     A(A),
+    /// The second media type.
     B(B),
+    /// The third media type.
     C(C),
+    /// The fourth media type.
     D(D),
+    /// The fifth media type.
     E(E),
 }
 
@@ -306,6 +373,7 @@ where
     }
 }
 
+/// Accept 6 media types.
 #[derive(Debug)]
 pub enum Accept6<A, B, C, D, E, F>
 where
@@ -316,11 +384,17 @@ where
     E: AssociatedMediaType,
     F: AssociatedMediaType,
 {
+    /// The first media type.
     A(A),
+    /// The second media type.
     B(B),
+    /// The third media type.
     C(C),
+    /// The fourth media type.
     D(D),
+    /// The fifth media type.
     E(E),
+    /// The sixth media type.
     F(F),
 }
 
