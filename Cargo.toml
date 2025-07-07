@@ -6,3 +6,7 @@ edition = "2024"
 [dependencies]
 axum = { version = "0.8", default-features = false }
 mediatype = "0.20"
+
+[dev-dependencies]
+axum = { version = "0.8", features = ["json"] }
+serde = { version = "1", features = ["derive"] }
