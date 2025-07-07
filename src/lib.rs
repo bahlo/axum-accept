@@ -61,7 +61,8 @@ pub trait AssociatedMediaType {
 #[macro_export]
 macro_rules! typed_media_type {
     ($name:ident: $ty:ident/$subty:ident) => {
-        pub struct $name($crate::mediatype::MediaType<'static>);
+        #[derive(Debug)]
+        pub struct $name(#[allow(dead_code)] $crate::mediatype::MediaType<'static>);
 
         impl $crate::AssociatedMediaType for $name {
             fn new(media_type: $crate::mediatype::MediaType<'static>) -> Self {
@@ -470,6 +471,10 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use axum::{
+        body::Body,
+        extract::{FromRequest, Request},
+    };
     use mediatype::media_type;
 
     #[test]
@@ -573,5 +578,309 @@ mod tests {
             ],
             list
         );
+    }
+
+    typed_media_type!(TextPlain: TEXT/PLAIN);
+    typed_media_type!(TextHtml: TEXT/HTML);
+    typed_media_type!(TextXml: TEXT/XML);
+    typed_media_type!(TextCalendar: TEXT/CALENDAR);
+    typed_media_type!(ImageGif: IMAGE/GIF);
+    typed_media_type!(ApplicationEpub: APPLICATION/EPUB);
+
+    #[tokio::test]
+    async fn test_no_supported_media_type_found() -> Result<(), Box<dyn std::error::Error>> {
+        let req = Request::builder()
+            .header("accept", "text/html,application/json")
+            .body(Body::from(""))?;
+        let state = ();
+        match Accept::<TextPlain>::from_request(req, &state).await {
+            Err(AcceptRejection::NoSupportedMediaTypeFound) => {}
+            _ => panic!("Expected no supported media type found rejection"),
+        }
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_accept() -> Result<(), Box<dyn std::error::Error>> {
+        let req = Request::builder()
+            .header("accept", "appliction/json,text/plain")
+            .body(Body::from(""))?;
+        let state = ();
+        let Accept(media_type) = Accept::<TextPlain>::from_request(req, &state)
+            .await
+            .expect("Expected no rejection");
+        assert_eq!(media_type!(TEXT / PLAIN), media_type.0);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_accept2() -> Result<(), Box<dyn std::error::Error>> {
+        let req = Request::builder()
+            .header("accept", "appliction/json,text/plain")
+            .body(Body::from(""))?;
+        let state = ();
+        let accept = Accept2::<TextPlain, TextHtml>::from_request(req, &state)
+            .await
+            .expect("Expected no rejection");
+        let Accept2::A(TextPlain(_)) = accept else {
+            panic!("expected text/plain to match");
+        };
+
+        let req = Request::builder()
+            .header("accept", "appliction/json,text/plain")
+            .body(Body::from(""))?;
+        let state = ();
+        let accept = Accept2::<TextHtml, TextPlain>::from_request(req, &state)
+            .await
+            .expect("Expected no rejection");
+        let Accept2::B(TextPlain(_)) = accept else {
+            panic!("expected text/plain to match");
+        };
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_accept3() -> Result<(), Box<dyn std::error::Error>> {
+        let req = Request::builder()
+            .header("accept", "appliction/json,text/plain")
+            .body(Body::from(""))?;
+        let state = ();
+        let accept = Accept3::<TextPlain, TextHtml, TextXml>::from_request(req, &state)
+            .await
+            .expect("Expected no rejection");
+        let Accept3::A(TextPlain(_)) = accept else {
+            panic!("expected text/plain to match");
+        };
+
+        let req = Request::builder()
+            .header("accept", "appliction/json,text/plain")
+            .body(Body::from(""))?;
+        let state = ();
+        let accept = Accept3::<TextHtml, TextPlain, TextXml>::from_request(req, &state)
+            .await
+            .expect("Expected no rejection");
+        let Accept3::B(TextPlain(_)) = accept else {
+            panic!("expected text/plain to match");
+        };
+
+        let req = Request::builder()
+            .header("accept", "appliction/json,text/plain")
+            .body(Body::from(""))?;
+        let state = ();
+        let accept = Accept3::<TextHtml, TextXml, TextPlain>::from_request(req, &state)
+            .await
+            .expect("Expected no rejection");
+        let Accept3::C(TextPlain(_)) = accept else {
+            panic!("expected text/plain to match");
+        };
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_accept4() -> Result<(), Box<dyn std::error::Error>> {
+        let req = Request::builder()
+            .header("accept", "appliction/json,text/plain")
+            .body(Body::from(""))?;
+        let state = ();
+        let accept =
+            Accept4::<TextPlain, TextHtml, TextXml, TextCalendar>::from_request(req, &state)
+                .await
+                .expect("Expected no rejection");
+        let Accept4::A(TextPlain(_)) = accept else {
+            panic!("expected text/plain to match");
+        };
+
+        let req = Request::builder()
+            .header("accept", "appliction/json,text/plain")
+            .body(Body::from(""))?;
+        let state = ();
+        let accept =
+            Accept4::<TextHtml, TextPlain, TextXml, TextCalendar>::from_request(req, &state)
+                .await
+                .expect("Expected no rejection");
+        let Accept4::B(TextPlain(_)) = accept else {
+            panic!("expected text/plain to match");
+        };
+
+        let req = Request::builder()
+            .header("accept", "appliction/json,text/plain")
+            .body(Body::from(""))?;
+        let state = ();
+        let accept =
+            Accept4::<TextHtml, TextXml, TextPlain, TextCalendar>::from_request(req, &state)
+                .await
+                .expect("Expected no rejection");
+        let Accept4::C(TextPlain(_)) = accept else {
+            panic!("expected text/plain to match");
+        };
+
+        let req = Request::builder()
+            .header("accept", "appliction/json,text/plain")
+            .body(Body::from(""))?;
+        let state = ();
+        let accept =
+            Accept4::<TextHtml, TextXml, TextCalendar, TextPlain>::from_request(req, &state)
+                .await
+                .expect("Expected no rejection");
+        let Accept4::D(TextPlain(_)) = accept else {
+            panic!("expected text/plain to match");
+        };
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_accept5() -> Result<(), Box<dyn std::error::Error>> {
+        let req = Request::builder()
+            .header("accept", "appliction/json,text/plain")
+            .body(Body::from(""))?;
+        let state = ();
+        let accept = Accept5::<TextPlain, TextHtml, TextXml, TextCalendar, ImageGif>::from_request(
+            req, &state,
+        )
+        .await
+        .expect("Expected no rejection");
+        let Accept5::A(TextPlain(_)) = accept else {
+            panic!("expected text/plain to match");
+        };
+
+        let req = Request::builder()
+            .header("accept", "appliction/json,text/plain")
+            .body(Body::from(""))?;
+        let state = ();
+        let accept = Accept5::<TextHtml, TextPlain, TextXml, TextCalendar, ImageGif>::from_request(
+            req, &state,
+        )
+        .await
+        .expect("Expected no rejection");
+        let Accept5::B(TextPlain(_)) = accept else {
+            panic!("expected text/plain to match");
+        };
+
+        let req = Request::builder()
+            .header("accept", "appliction/json,text/plain")
+            .body(Body::from(""))?;
+        let state = ();
+        let accept = Accept5::<TextHtml, TextXml, TextPlain, TextCalendar, ImageGif>::from_request(
+            req, &state,
+        )
+        .await
+        .expect("Expected no rejection");
+        let Accept5::C(TextPlain(_)) = accept else {
+            panic!("expected text/plain to match");
+        };
+
+        let req = Request::builder()
+            .header("accept", "appliction/json,text/plain")
+            .body(Body::from(""))?;
+        let state = ();
+        let accept = Accept5::<TextHtml, TextXml, TextCalendar, TextPlain, ImageGif>::from_request(
+            req, &state,
+        )
+        .await
+        .expect("Expected no rejection");
+        let Accept5::D(TextPlain(_)) = accept else {
+            panic!("expected text/plain to match");
+        };
+
+        let req = Request::builder()
+            .header("accept", "appliction/json,text/plain")
+            .body(Body::from(""))?;
+        let state = ();
+        let accept = Accept5::<TextHtml, TextXml, TextCalendar, ImageGif, TextPlain>::from_request(
+            req, &state,
+        )
+        .await
+        .expect("Expected no rejection");
+        let Accept5::E(TextPlain(_)) = accept else {
+            panic!("expected text/plain to match");
+        };
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_accept6() -> Result<(), Box<dyn std::error::Error>> {
+        let req = Request::builder()
+            .header("accept", "appliction/json,text/plain")
+            .body(Body::from(""))?;
+        let state = ();
+        let accept = Accept6::<TextPlain, TextHtml, TextXml, TextCalendar, ImageGif, ApplicationEpub>::from_request(
+            req, &state,
+        )
+        .await
+        .expect("Expected no rejection");
+        let Accept6::A(TextPlain(_)) = accept else {
+            panic!("expected text/plain to match");
+        };
+
+        let req = Request::builder()
+            .header("accept", "appliction/json,text/plain")
+            .body(Body::from(""))?;
+        let state = ();
+        let accept = Accept6::<TextHtml, TextPlain, TextXml, TextCalendar, ImageGif, ApplicationEpub>::from_request(
+            req, &state,
+        )
+        .await
+        .expect("Expected no rejection");
+        let Accept6::B(TextPlain(_)) = accept else {
+            panic!("expected text/plain to match");
+        };
+
+        let req = Request::builder()
+            .header("accept", "appliction/json,text/plain")
+            .body(Body::from(""))?;
+        let state = ();
+        let accept = Accept6::<TextHtml, TextXml, TextPlain, TextCalendar, ImageGif, ApplicationEpub>::from_request(
+            req, &state,
+        )
+        .await
+        .expect("Expected no rejection");
+        let Accept6::C(TextPlain(_)) = accept else {
+            panic!("expected text/plain to match");
+        };
+
+        let req = Request::builder()
+            .header("accept", "appliction/json,text/plain")
+            .body(Body::from(""))?;
+        let state = ();
+        let accept = Accept6::<TextHtml, TextXml, TextCalendar, TextPlain, ImageGif, ApplicationEpub>::from_request(
+            req, &state,
+        )
+        .await
+        .expect("Expected no rejection");
+        let Accept6::D(TextPlain(_)) = accept else {
+            panic!("expected text/plain to match");
+        };
+
+        let req = Request::builder()
+            .header("accept", "appliction/json,text/plain")
+            .body(Body::from(""))?;
+        let state = ();
+        let accept = Accept6::<TextHtml, TextXml, TextCalendar, ImageGif, TextPlain, ApplicationEpub>::from_request(
+            req, &state,
+        )
+        .await
+        .expect("Expected no rejection");
+        let Accept6::E(TextPlain(_)) = accept else {
+            panic!("expected text/plain to match");
+        };
+
+        let req = Request::builder()
+            .header("accept", "appliction/json,text/plain")
+            .body(Body::from(""))?;
+        let state = ();
+        let accept = Accept6::<TextHtml, TextXml, TextCalendar, ImageGif, ApplicationEpub, TextPlain>::from_request(
+            req, &state,
+        )
+        .await
+        .expect("Expected no rejection");
+        let Accept6::F(TextPlain(_)) = accept else {
+            panic!("expected text/plain to match");
+        };
+
+        Ok(())
     }
 }

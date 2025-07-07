@@ -58,6 +58,7 @@ dependencies = [
  "axum",
  "mediatype",
  "serde",
+ "tokio",
 ]
 
 [[package]]
