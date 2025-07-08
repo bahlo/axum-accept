@@ -7,7 +7,7 @@ description = "Typed accept negotiation for axum."
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/bahlo/axum-accept"
 documentation = "https://docs.rs/axum-accept"
-readme = "README.md"
+readme = "../README.md"
 keywords = ["axum", "accept", "media-type"]
 
 [dependencies]
