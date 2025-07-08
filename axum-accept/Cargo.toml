@@ -10,6 +10,9 @@ readme = "README.md"
 keywords = ["axum", "accept", "media-type"]
 
 [dependencies]
+axum-accept-macros= { version = "0.0.1", path = "../axum-accept-macros" }
+axum-accept-shared = { version = "0.0.1", path = "../axum-accept-shared" }
+
+[dev-dependencies]
 axum = { workspace = true }
-axum-accept-macros= { path = "../axum-accept-macros" }
-axum-accept-shared = { path = "../axum-accept-shared" }
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }

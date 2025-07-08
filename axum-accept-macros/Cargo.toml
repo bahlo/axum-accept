@@ -10,6 +10,6 @@ proc-macro = true
 proc-macro2 = "1"
 quote = "1"
 syn = { version = "2", features = ["full"] }
-axum-accept-shared = { path = "../axum-accept-shared" }
+axum-accept-shared = { version = "0.0.1", path = "../axum-accept-shared" }
 axum = { workspace = true }
 mediatype = { workspace = true }

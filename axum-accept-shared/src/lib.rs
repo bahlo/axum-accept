@@ -121,3 +121,112 @@ pub fn parse_mediatypes(headers: &HeaderMap) -> Result<Vec<MediaType<'_>>, Accep
 
     Ok(list.into_iter().map(|(_, mt)| mt).collect())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use mediatype::media_type;
+
+    #[test]
+    fn test_parse_mediatype_invisible_ascii() {
+        let mut headers = HeaderMap::new();
+        headers.insert("accept", "‎ ".parse().unwrap()); // invisible ascii is verboten
+        match parse_mediatypes(&headers) {
+            Err(AcceptRejection::InvalidHeader(_)) => {}
+            _ => panic!("expected invalid header rejection"),
+        }
+    }
+
+    #[test]
+    fn test_parse_mediatype_invalid_media_type() {
+        let mut headers = HeaderMap::new();
+        headers.insert("accept", "lol".parse().unwrap());
+        match parse_mediatypes(&headers) {
+            Err(AcceptRejection::InvalidMediaType(i, _)) => assert_eq!(i, 0),
+            _ => panic!("expected invalid media type rejection"),
+        }
+    }
+
+    #[test]
+    fn test_parse_mediatype_invalid_q() {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            "accept",
+            "text/plain,application/json;q=lol".parse().unwrap(),
+        );
+        match parse_mediatypes(&headers) {
+            Err(AcceptRejection::InvalidQ(i, _)) => assert_eq!(i, 1),
+            _ => panic!("expected invalid q rejection"),
+        }
+    }
+
+    #[test]
+    fn test_parse_mediatype_valid_types() {
+        let mut headers = HeaderMap::new();
+        headers.insert("accept", "text/plain".parse().unwrap());
+        let list = parse_mediatypes(&headers).expect("Accept header should've parsed correctly");
+        assert_eq!(vec![media_type!(TEXT / PLAIN)], list);
+
+        let mut headers = HeaderMap::new();
+        headers.insert("accept", "text/plain,application/json".parse().unwrap());
+        let list = parse_mediatypes(&headers).expect("Accept header should've parsed correctly");
+        assert_eq!(
+            vec![media_type!(TEXT / PLAIN), media_type!(APPLICATION / JSON)],
+            list
+        );
+
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            "accept",
+            "text/plain,application/json;q=0.9".parse().unwrap(),
+        );
+        let list = parse_mediatypes(&headers).expect("Accept header should've parsed correctly");
+        assert_eq!(2, list.len());
+        assert_eq!(media_type!(TEXT / PLAIN), list[0]);
+        assert_eq!(media_type!(APPLICATION / JSON), list[1].essence());
+    }
+
+    #[test]
+    fn test_parse_mediatype_order() {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            "accept",
+            "text/plain;q=0.9,application/json".parse().unwrap(),
+        );
+        let list = parse_mediatypes(&headers).expect("Accept header should've parsed correctly");
+        assert_eq!(2, list.len());
+        assert_eq!(media_type!(APPLICATION / JSON), list[0]);
+        assert_eq!(media_type!(TEXT / PLAIN), list[1].essence());
+
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            "accept",
+            "text/*,text/plain,application/json".parse().unwrap(),
+        );
+        let list = parse_mediatypes(&headers).expect("Accept header should've parsed correctly");
+        assert_eq!(
+            vec![
+                media_type!(TEXT / PLAIN),
+                media_type!(APPLICATION / JSON),
+                media_type!(TEXT / _STAR)
+            ],
+            list
+        );
+
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            "accept",
+            "*/*,text/*,text/plain,application/json".parse().unwrap(),
+        );
+        let list = parse_mediatypes(&headers).expect("Accept header should've parsed correctly");
+        assert_eq!(
+            vec![
+                media_type!(TEXT / PLAIN),
+                media_type!(APPLICATION / JSON),
+                media_type!(TEXT / _STAR),
+                media_type!(_STAR / _STAR)
+            ],
+            list
+        );
+    }
+}
