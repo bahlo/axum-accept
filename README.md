@@ -12,7 +12,6 @@ Typed accept negotiation for axum, following [RFC7231](https://www.rfc-editor.or
 ```rust
 use axum::{extract::Json, response::{IntoResponse, Response}};
 use axum_accept::AcceptExtractor;
-use serde::Serialize;
 use serde_json::json;
 
 #[derive(AcceptExtractor)]
@@ -25,8 +24,8 @@ enum Accept {
 
 async fn my_handler(accept: Accept) -> Response {
     match accept {
-        TextPlain => "hello world".into_response(),
-        ApplicationJson => Json(json! { "content": "hello_world".to_string() }).into_response(),
+        Accept::TextPlain => "hello world".into_response(),
+        Accept::ApplicationJson => Json(json!({ "content": "hello_world" })).into_response(),
     }
 }
 ```

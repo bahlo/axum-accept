@@ -14,5 +14,6 @@ axum-accept-macros= { version = "0.0.2", path = "../axum-accept-macros" }
 axum-accept-shared = { version = "0.0.2", path = "../axum-accept-shared" }
 
 [dev-dependencies]
-axum = { workspace = true }
+axum = { workspace = true, features = ["json"] }
+serde_json = "1"
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }

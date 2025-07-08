@@ -17,6 +17,10 @@
 pub use axum_accept_macros::AcceptExtractor;
 pub use axum_accept_shared::AcceptRejection;
 
+#[cfg(doctest)]
+#[doc = include_str!("../../README.md")]
+pub struct ReadmeDoctests;
+
 #[cfg(test)]
 mod tests {
     use super::*;
