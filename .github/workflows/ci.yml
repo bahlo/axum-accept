@@ -71,6 +71,6 @@ jobs:
       - check_versions
     steps:
       - uses: actions/checkout@v4
-      - run: cargo publish -p axum-accept-shared --token ${{ secrets.CRATES_IO_TOKEN }}
+      # - run: cargo publish -p axum-accept-shared --token ${{ secrets.CRATES_IO_TOKEN }}
       - run: cargo publish -p axum-accept-macros --token ${{ secrets.CRATES_IO_TOKEN }}
       - run: cargo publish -p axum-accept --token ${{ secrets.CRATES_IO_TOKEN }}
