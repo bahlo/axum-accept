@@ -1,6 +1,6 @@
 [package]
 name = "axum-accept-shared"
-version = "0.0.4"
+version = "0.0.5"
 edition = "2024"
 description = "Shared code for the axum-accept crate"
 license = "MIT OR Apache-2.0"
