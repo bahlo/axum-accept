@@ -17,6 +17,9 @@
 pub use axum_accept_macros::AcceptExtractor;
 pub use axum_accept_shared::AcceptRejection;
 
+#[doc(hidden)]
+pub use axum_accept_shared::parse_mediatypes;
+
 #[cfg(doctest)]
 #[doc = include_str!("../../README.md")]
 pub struct ReadmeDoctests;
@@ -24,6 +27,7 @@ pub struct ReadmeDoctests;
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate as axum_accept; // necessary for the macro to work
     use axum::{
         body::Body,
         extract::{FromRequest, Request},

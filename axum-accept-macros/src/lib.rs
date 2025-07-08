@@ -92,17 +92,17 @@ pub fn derive_accept_extractor(input: TokenStream) -> TokenStream {
 
     let expanded = quote! {
         impl #impl_generics axum::extract::FromRequestParts<S> for #name #ty_generics #where_clause {
-            type Rejection = axum_accept_shared::AcceptRejection;
+            type Rejection = axum_accept::AcceptRejection;
 
             async fn from_request_parts(parts: &mut axum::http::request::Parts, _state: &S) -> Result<Self, Self::Rejection> {
-                for mt in axum_accept_shared::parse_mediatypes(&parts.headers)? {
+                for mt in axum_accept::parse_mediatypes(&parts.headers)? {
                     match (mt.ty.as_str(), mt.subty.as_str(), mt.suffix.map(|s| s.as_str())) {
                         #(#match_arms)*
                         _ => {} // continue searching
                     }
                 }
 
-                Err(axum_accept_shared::AcceptRejection::NoSupportedMediaTypeFound)
+                Err(axum_accept::AcceptRejection::NoSupportedMediaTypeFound)
             }
         }
     };
