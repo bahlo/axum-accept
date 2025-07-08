@@ -9,7 +9,6 @@ on:
       - "v*"
     branches:
       - main
-      - arne/proc-macros
 
 jobs:
   rustfmt_check:
