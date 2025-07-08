@@ -35,8 +35,6 @@ mod tests {
 
     #[derive(Debug, AcceptExtractor)]
     enum Accept {
-        #[accept(mediatype = "text/*")]
-        Text,
         #[accept(mediatype = "text/plain")]
         TextPlain,
         #[accept(mediatype = "application/json")]
@@ -118,13 +116,39 @@ mod tests {
         Ok(())
     }
 
+    #[tokio::test]
+    async fn test_accept_extractor_star() -> Result<(), Box<dyn std::error::Error>> {
+        let req = Request::builder()
+            .header("accept", "text/csv,text/*")
+            .body(Body::from(""))?;
+        let state = ();
+        let media_type = Accept::from_request(req, &state).await;
+        let Ok(Accept::TextPlain) = media_type else {
+            panic!("expected text/*, got {:?}", media_type)
+        };
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_accept_extractor_star_star() -> Result<(), Box<dyn std::error::Error>> {
+        let req = Request::builder()
+            .header("accept", "text/csv,*/*")
+            .body(Body::from(""))?;
+        let state = ();
+        let media_type = Accept::from_request(req, &state).await;
+        let Ok(Accept::TextPlain) = media_type else {
+            panic!("expected text/plain")
+        };
+        Ok(())
+    }
+
     #[derive(Debug, AcceptExtractor, Default)]
     enum AcceptWithDefault {
+        #[accept(mediatype = "application/json")]
+        ApplicationJson,
         #[default]
         #[accept(mediatype = "text/plain")]
         TextPlain,
-        #[accept(mediatype = "application/json")]
-        ApplicationJson,
     }
 
     #[tokio::test]
@@ -139,6 +163,19 @@ mod tests {
         };
 
         let req = Request::builder().body(Body::from(""))?;
+        let state = ();
+        let media_type = AcceptWithDefault::from_request(req, &state).await;
+        let Ok(AcceptWithDefault::TextPlain) = media_type else {
+            panic!("expected text/plain (default)")
+        };
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_accept_extractor_star_star_default() -> Result<(), Box<dyn std::error::Error>> {
+        let req = Request::builder()
+            .header("accept", "text/csv,*/*")
+            .body(Body::from(""))?;
         let state = ();
         let media_type = AcceptWithDefault::from_request(req, &state).await;
         let Ok(AcceptWithDefault::TextPlain) = media_type else {

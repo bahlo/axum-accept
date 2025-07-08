@@ -4,6 +4,8 @@
 #![deny(missing_docs)]
 extern crate proc_macro;
 
+use std::collections::HashMap;
+
 use mediatype::MediaTypeBuf;
 use proc_macro::TokenStream;
 use quote::quote;
@@ -66,7 +68,12 @@ pub fn derive_accept_extractor(input: TokenStream) -> TokenStream {
         })
     });
 
+    // Match arms with ty, subty and suffix
     let mut match_arms = Vec::new();
+    // Match arms with ty only (for checking mediatypes like text/*)
+    let mut match_arms_tys = HashMap::new();
+    // Store first variant to fall back to if we don't have a default.
+    let mut first_variant_name = None;
 
     for variant in &data.variants {
         let variant_name = &variant.ident;
@@ -78,6 +85,16 @@ pub fn derive_accept_extractor(input: TokenStream) -> TokenStream {
             mediatype.subty().as_str(),
             mediatype.suffix().map(|s| s.as_str()),
         );
+
+        if ty == "*" || subty == "*" {
+            panic!("Please use a concrete mediatype");
+        }
+
+        if first_variant_name.is_none() {
+            first_variant_name = Some(variant_name.clone());
+        }
+
+        match_arms_tys.insert(ty.to_string(), variant_name);
 
         match &variant.fields {
             Fields::Unit => {
@@ -107,6 +124,22 @@ pub fn derive_accept_extractor(input: TokenStream) -> TokenStream {
         None
     };
 
+    let handle_star_star = if has_default {
+        quote! {
+            return Ok(#name::default());
+        }
+    } else {
+        quote! {
+            return Ok(#name::#first_variant_name);
+        }
+    };
+
+    let match_arms_tys = match_arms_tys.iter().map(|(ty, variant_name)| {
+        quote! {
+            (#ty) => return Ok(#name::#variant_name),
+        }
+    });
+
     let expanded = quote! {
         impl #impl_generics axum::extract::FromRequestParts<S> for #name #ty_generics #where_clause {
             type Rejection = axum_accept::AcceptRejection;
@@ -115,9 +148,23 @@ pub fn derive_accept_extractor(input: TokenStream) -> TokenStream {
                 let mediatypes = axum_accept::parse_mediatypes(&parts.headers)?;
                 #check_and_return_default
                 for mt in mediatypes {
-                    match (mt.ty.as_str(), mt.subty.as_str(), mt.suffix.map(|s| s.as_str())) {
-                        #(#match_arms)*
-                        _ => {} // continue searching
+                    match (mt.ty.as_str(), mt.subty.as_str()) {
+                        ("*", "*") => {
+                            // return either the the default or the first
+                            // variant
+                            #handle_star_star
+                        },
+                        // do we have any mediatype that shares the main type?
+                        // e.g. we offer text/plain and get accept: text/*
+                        (_, "*") => match (mt.ty.as_str()) {
+                            #(#match_arms_tys)*
+                            _ => {} // continue searching
+                        },
+                        // do proper matching
+                        _ =>  match (mt.ty.as_str(), mt.subty.as_str(), mt.suffix.map(|s| s.as_str())) {
+                            #(#match_arms)*
+                            _ => {} // continue searching
+                        },
                     }
                 }
 

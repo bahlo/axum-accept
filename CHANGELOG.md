@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.5] - 2025-07-08
+
+### Changed
+
+- This adds proper support for stars in accept headers
+- Forbid the use of * in definitions
+
 ## [0.0.4] - 2025-07-08
 
 ### Added
