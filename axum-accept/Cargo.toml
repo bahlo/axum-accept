@@ -1,6 +1,6 @@
 [package]
 name = "axum-accept"
-version = "0.0.3"
+version = "0.0.4"
 authors = ["Arne Bahlo <hey@arne.me>"]
 edition = "2024"
 description = "Typed accept negotiation for axum."
@@ -11,8 +11,8 @@ readme = "../README.md"
 keywords = ["axum", "accept", "media-type"]
 
 [dependencies]
-axum-accept-macros= { version = "0.0.3", path = "../axum-accept-macros" }
-axum-accept-shared = { version = "0.0.3", path = "../axum-accept-shared" }
+axum-accept-macros= { version = "0.0.4", path = "../axum-accept-macros" }
+axum-accept-shared = { version = "0.0.4", path = "../axum-accept-shared" }
 
 [dev-dependencies]
 axum = { workspace = true, features = ["json"] }
