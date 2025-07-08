@@ -3,7 +3,7 @@
 #![deny(warnings)]
 #![deny(clippy::pedantic, clippy::unwrap_used)]
 #![deny(missing_docs)]
-use std::{cmp::Ordering, str::FromStr};
+use std::{cmp::Ordering, fmt::Display, str::FromStr};
 
 use axum::{
     http::{HeaderMap, StatusCode, header::ToStrError},
@@ -54,6 +54,15 @@ impl IntoResponse for AcceptRejection {
         self.status_and_message().into_response()
     }
 }
+
+impl Display for AcceptRejection {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let (_, message) = self.status_and_message();
+        write!(f, "{message}")
+    }
+}
+
+impl std::error::Error for AcceptRejection {}
 
 /// Parse and process the media types from the accept header.
 ///

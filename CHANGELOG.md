@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Implement `std::error::Error` for `AcceptRejection`
+
 ## [0.0.3] - 2025-07-08
 
 ### Fixed
