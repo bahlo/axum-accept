@@ -59,6 +59,13 @@ pub fn derive_accept_extractor(input: TokenStream) -> TokenStream {
         panic!("AcceptExtractor can only be derived for enums");
     };
 
+    let has_default = data.variants.iter().any(|variant| {
+        variant.attrs.iter().any(|attr| match &attr.meta {
+            Meta::Path(path) => path.is_ident("default"),
+            _ => false,
+        })
+    });
+
     let mut match_arms = Vec::new();
 
     for variant in &data.variants {
@@ -90,12 +97,24 @@ pub fn derive_accept_extractor(input: TokenStream) -> TokenStream {
         }
     }
 
+    let check_and_return_default = if has_default {
+        Some(quote! {
+            if mediatypes.is_empty() {
+                return Ok(#name::default());
+            }
+        })
+    } else {
+        None
+    };
+
     let expanded = quote! {
         impl #impl_generics axum::extract::FromRequestParts<S> for #name #ty_generics #where_clause {
             type Rejection = axum_accept::AcceptRejection;
 
             async fn from_request_parts(parts: &mut axum::http::request::Parts, _state: &S) -> Result<Self, Self::Rejection> {
-                for mt in axum_accept::parse_mediatypes(&parts.headers)? {
+                let mediatypes = axum_accept::parse_mediatypes(&parts.headers)?;
+                #check_and_return_default
+                for mt in mediatypes {
                     match (mt.ty.as_str(), mt.subty.as_str(), mt.suffix.map(|s| s.as_str())) {
                         #(#match_arms)*
                         _ => {} // continue searching

@@ -117,4 +117,33 @@ mod tests {
         };
         Ok(())
     }
+
+    #[derive(Debug, AcceptExtractor, Default)]
+    enum AcceptWithDefault {
+        #[default]
+        #[accept(mediatype = "text/plain")]
+        TextPlain,
+        #[accept(mediatype = "application/json")]
+        ApplicationJson,
+    }
+
+    #[tokio::test]
+    async fn test_accept_extractor_default() -> Result<(), Box<dyn std::error::Error>> {
+        let req = Request::builder()
+            .header("accept", "text/csv")
+            .body(Body::from(""))?;
+        let state = ();
+        let media_type = AcceptWithDefault::from_request(req, &state).await;
+        let Err(AcceptRejection::NoSupportedMediaTypeFound) = media_type else {
+            panic!("expected no supported media type found")
+        };
+
+        let req = Request::builder().body(Body::from(""))?;
+        let state = ();
+        let media_type = AcceptWithDefault::from_request(req, &state).await;
+        let Ok(AcceptWithDefault::TextPlain) = media_type else {
+            panic!("expected text/plain (default)")
+        };
+        Ok(())
+    }
 }
