@@ -2,6 +2,10 @@
 name = "axum-accept-macros"
 version = "0.0.2"
 edition = "2024"
+description = "Proc-macro for the axum-accept crate"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/bahlo/axum-accept"
+documentation = "https://docs.rs/axum-accept"
 
 [lib]
 proc-macro = true
