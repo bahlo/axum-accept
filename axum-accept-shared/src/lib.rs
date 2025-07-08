@@ -105,27 +105,31 @@ pub fn parse_mediatypes(headers: &HeaderMap) -> Result<Vec<MediaType<'_>>, Accep
         .collect::<Result<Vec<(u16, MediaType)>, AcceptRejection>>()?;
 
     list.sort_by(|(a_q, a_mt), (b_q, b_mt)| {
-        if a_q == b_q {
-            // both have the same q, order by specificity
+        let ord = b_q.cmp(a_q);
+        match ord {
+            Ordering::Less | Ordering::Greater => ord,
+            Ordering::Equal => {
+                // both have the same q, order by specificity
 
-            // is one of them */*? these come last
-            if (a_mt.ty, a_mt.subty) == (_STAR, _STAR) {
-                return Ordering::Greater;
-            } else if (b_mt.ty, b_mt.subty) == (_STAR, _STAR) {
-                return Ordering::Less;
-            }
-
-            // now check the subtype
-            if a_mt.subty != b_mt.subty {
-                if a_mt.subty == _STAR {
+                // is one of them */*? these come last
+                if (a_mt.ty, a_mt.subty) == (_STAR, _STAR) {
                     return Ordering::Greater;
-                } else if b_mt.subty == _STAR {
+                } else if (b_mt.ty, b_mt.subty) == (_STAR, _STAR) {
                     return Ordering::Less;
                 }
+
+                // now check the subtype
+                if a_mt.subty != b_mt.subty {
+                    if a_mt.subty == _STAR {
+                        return Ordering::Greater;
+                    } else if b_mt.subty == _STAR {
+                        return Ordering::Less;
+                    }
+                }
+
+                Ordering::Equal
             }
         }
-
-        b_q.cmp(a_q)
     });
 
     Ok(list.into_iter().map(|(_, mt)| mt).collect())
