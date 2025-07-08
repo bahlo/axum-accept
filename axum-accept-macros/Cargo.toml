@@ -1,6 +1,6 @@
 [package]
 name = "axum-accept-macros"
-version = "0.0.2"
+version = "0.0.3"
 edition = "2024"
 description = "Proc-macro for the axum-accept crate"
 license = "MIT OR Apache-2.0"
@@ -14,6 +14,6 @@ proc-macro = true
 proc-macro2 = "1"
 quote = "1"
 syn = { version = "2", features = ["full"] }
-axum-accept-shared = { version = "0.0.2", path = "../axum-accept-shared" }
+axum-accept-shared = { version = "0.0.3", path = "../axum-accept-shared" }
 axum = { workspace = true }
 mediatype = { workspace = true }
