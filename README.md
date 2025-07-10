@@ -14,10 +14,11 @@ use axum::{extract::Json, response::{IntoResponse, Response}};
 use axum_accept::AcceptExtractor;
 use serde_json::json;
 
-#[derive(AcceptExtractor)]
+#[derive(AcceptExtractor, Default)]
 enum Accept {
     #[accept(mediatype="text/plain")]
     TextPlain,
+    #[default]
     #[accept(mediatype="application/json")]
     ApplicationJson,
 }
@@ -30,6 +31,16 @@ async fn my_handler(accept: Accept) -> Response {
 }
 ```
 
+## Edge cases
+
+Setting a default is recommended as this is more explicitly in your code.
+This is how axum-accept behaves on edge cases:
+
+| Accept    | Has default               | No default                |
+| --------- | ------------------------- | ------------------------- |
+| `<empty>` | Default variant           | HTTP 406 (Not Acceptable) |
+| `*/*`     | Default variant           | First variant             |
+ 
 ## License
 
 Licensed under either of
