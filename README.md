@@ -33,7 +33,8 @@ async fn my_handler(accept: Accept) -> Response {
 
 ## Edge cases
 
-Setting a default is recommended as this is more explicitly in your code.
+Setting a default is recommended as it indicates behaviour more explicitly in
+your code.
 This is how axum-accept behaves on edge cases:
 
 | Accept    | Has default               | No default                |
