@@ -30,8 +30,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: cargo-bins/cargo-binstall@main
-      - run: cargo binstall -y tomlq
-      - run: ./scripts/check-versions.sh
+      - run: cargo binstall -y rust-script
+      - run: ./scripts/check-versions.rs
   clippy_check:
     name: Clippy check
     runs-on: ubuntu-latest
