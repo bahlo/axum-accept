@@ -137,7 +137,8 @@ pub fn parse_mediatypes(headers: &HeaderMap) -> Result<Vec<MediaType<'_>>, Accep
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{AcceptRejection, parse_mediatypes};
+    use axum::http::HeaderMap;
     use mediatype::media_type;
 
     #[test]

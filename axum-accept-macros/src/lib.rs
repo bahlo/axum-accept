@@ -19,6 +19,7 @@ use syn::{
 /// # Panics
 ///
 /// If it fails to parse the attributes.
+#[allow(clippy::too_many_lines)]
 #[proc_macro_derive(AcceptExtractor, attributes(accept))]
 pub fn derive_accept_extractor(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
@@ -40,13 +41,13 @@ pub fn derive_accept_extractor(input: TokenStream) -> TokenStream {
                 paren_token: None,
                 modifier: syn::TraitBoundModifier::None,
                 lifetimes: None,
-                path: syn::parse_str("Send").unwrap(),
+                path: syn::parse_str("Send").expect("Failed to parse 'Send'"),
             }));
             bounds.push(TypeParamBound::Trait(syn::TraitBound {
                 paren_token: None,
                 modifier: syn::TraitBoundModifier::None,
                 lifetimes: None,
-                path: syn::parse_str("Sync").unwrap(),
+                path: syn::parse_str("Sync").expect("Failed to parse 'Sync'"),
             }));
             bounds
         },
@@ -86,9 +87,7 @@ pub fn derive_accept_extractor(input: TokenStream) -> TokenStream {
             mediatype.suffix().map(|s| s.as_str()),
         );
 
-        if ty == "*" || subty == "*" {
-            panic!("Please use a concrete mediatype");
-        }
+        assert!(ty != "*" && subty != "*", "Please use a concrete mediatype");
 
         if first_variant_name.is_none() {
             first_variant_name = Some(variant_name.clone());
