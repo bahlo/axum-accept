@@ -21,7 +21,7 @@ fn main() {
         "axum-accept-macros has a different version than axum-accept-shared"
     );
 
-    // check dependencies againg `axum_accept.version`
+    // check dependency versions
     for cargo in [&axum_accept, &axum_accept_macros, &axum_accept_shared] {
         if let Some(version) = &cargo.macros_version {
             assert_eq!(
