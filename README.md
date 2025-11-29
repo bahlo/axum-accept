@@ -1,3 +1,7 @@
+### :warning: This project has moved to [codeberg.org/enra/axum-accept](https://codeberg.org/enra/axum-accept).
+
+----
+
 # axum-accept
 
 [![CI](https://github.com/bahlo/axum-accept/actions/workflows/ci.yml/badge.svg)](https://github.com/bahlo/axum-accept/actions/workflows/ci.yml)
