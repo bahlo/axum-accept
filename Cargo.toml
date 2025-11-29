@@ -8,4 +8,4 @@ resolver = "2"
 
 [workspace.dependencies]
 axum = { version = "0.8", default-features = false }
-mediatype = "0.20"
+mediatype = "0.21"
