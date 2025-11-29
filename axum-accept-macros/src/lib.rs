@@ -178,21 +178,23 @@ pub fn derive_accept_extractor(input: TokenStream) -> TokenStream {
 fn get_accept_mediatype(attrs: &[Attribute]) -> String {
     for attr in attrs {
         if attr.path().is_ident("accept")
-            && let Meta::List(meta_list) = &attr.meta {
-                for nested in meta_list
-                    .parse_args_with(
-                        syn::punctuated::Punctuated::<syn::Meta, syn::Token![,]>::parse_terminated,
-                    )
-                    .expect("Failed to parse args")
+            && let Meta::List(meta_list) = &attr.meta
+        {
+            for nested in meta_list
+                .parse_args_with(
+                    syn::punctuated::Punctuated::<syn::Meta, syn::Token![,]>::parse_terminated,
+                )
+                .expect("Failed to parse args")
+            {
+                if let syn::Meta::NameValue(name_value) = nested
+                    && name_value.path.is_ident("mediatype")
+                    && let syn::Expr::Lit(expr_lit) = &name_value.value
+                    && let Lit::Str(lit_str) = &expr_lit.lit
                 {
-                    if let syn::Meta::NameValue(name_value) = nested
-                        && name_value.path.is_ident("mediatype")
-                            && let syn::Expr::Lit(expr_lit) = &name_value.value
-                                && let Lit::Str(lit_str) = &expr_lit.lit {
-                                    return lit_str.value();
-                                }
+                    return lit_str.value();
                 }
             }
+        }
     }
 
     panic!(r#"Missing #[accept(mediatype = "...")]"#)
